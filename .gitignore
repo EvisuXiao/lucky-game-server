@@ -20,5 +20,5 @@ phpunit.xml
 *.un~
 *.swp*
 bower_components
-.env
+#.env
 _ide_helper.php
