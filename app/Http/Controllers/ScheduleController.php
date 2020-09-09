@@ -30,6 +30,15 @@ class ScheduleController extends Controller
         return !empty($add) ? $this->succReturn() : $this->failReturn();
     }
 
+    public function update() {
+        try {
+            $this->gameRepository->saveScore($this->input['id'], $this->input['home_team_score'], $this->input['away_team_score']);
+        } catch(\Exception $e) {
+            return $this->failReturn($e->getMessage());
+        }
+        return $this->succReturn();
+    }
+
     public function delete() {
         $upd = $this->scheduleModel->setRecEnabled($this->input['id'], false);
         return !empty($upd) ? $this->succReturn() : $this->failReturn();
@@ -38,5 +47,9 @@ class ScheduleController extends Controller
     public function random() {
         $this->gameRepository->randomSchedule($this->input['date']);
         return $this->succReturn();
+    }
+
+    public function record() {
+        return $this->succReturn($this->gameRepository->getBetRecordBySchedule($this->input['schedule_id']));
     }
 }

@@ -31,6 +31,7 @@ CREATE TABLE `schedule` (
   `game_result` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '比赛结果',
   `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),
   KEY `idx_game_time` (`game_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='赛程表';
@@ -43,6 +44,7 @@ CREATE TABLE `contest` (
   `success` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '竞猜结果',
   `lucky` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否中奖',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_schedule_user` (`schedule_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='竞猜表';

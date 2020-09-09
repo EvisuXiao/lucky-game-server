@@ -27,6 +27,30 @@ class GameRepository extends BaseRepository {
         $this->contestModel = $contestModel;
     }
 
+    public function saveScore($id, $home_team_score, $away_team_score) {
+        $game_result = $home_team_score > $away_team_score ? 1 : ($home_team_score < $away_team_score ? 3 : 2);
+        $contests = $this->contestModel->getRecList(['id', 'bet', 'lucky'], ['schedule_id' => $id]);
+        $success_ids = [];
+        $failure_ids = [];
+        foreach($contests as $contest) {
+            if($contest['lucky']) {
+                throw new \Exception('开奖后不可再修改比分');
+            }
+            if($contest['bet'] == $game_result) {
+                $success_ids[] = $contest['id'];
+            } else {
+                $failure_ids[] = $contest['id'];
+            }
+        }
+        $this->scheduleModel->updateRecById($id, compact('home_team_score', 'away_team_score', 'game_result'));
+        if(!empty($success_ids)) {
+            $this->contestModel->updateRecById($success_ids, ['success' => true]);
+        }
+        if(!empty($failure_ids)) {
+            $this->contestModel->updateRecById($failure_ids, ['success' => false]);
+        }
+    }
+
     public function getScheduleList($date) {
         $where = [];
         if(!empty($date)) {
@@ -59,6 +83,47 @@ class GameRepository extends BaseRepository {
         return $schedules;
     }
 
+    public function getBetRecordByUser($nickname) {
+        $user = $this->userModel->getUserByNickname($nickname);
+        if(empty($user)) {
+            return [];
+        }
+        $contests = $this->contestModel->getRecList(['schedule_id', 'bet', 'success', 'lucky', 'created_at'], ['user_id' => $user['id']]);
+        if(empty($contests)) {
+            return [];
+        }
+        $schedule_ids = array_column($contests, 'schedule_id');
+        $schedules = $this->scheduleModel->getRecInfoById($schedule_ids);
+        $schedule_info = array_column($schedules, null, 'id');
+        foreach($contests as &$contest) {
+            $schedule = $schedule_info[$contest['schedule_id']] ?? [];
+            $contest = array_merge($schedule, $contest);
+        }
+        return $contests;
+    }
+
+    public function getBetRecordBySchedule($schedule_id) {
+        $contests = $this->contestModel->getRecList(['id', 'user_id', 'bet', 'success', 'lucky', 'created_at'], ['schedule_id' => $schedule_id]);
+        if(empty($contests)) {
+            return [];
+        }
+        $user_ids = array_column($contests, 'user_id');
+        $users = $this->userModel->getRecInfoById($user_ids, ['id', 'nickname', 'phone', 'wechat_id']);
+        $user_info = array_column($users, null, 'id');
+        foreach($contests as &$contest) {
+            $contest['user_nickname'] = '';
+            $contest['user_phone'] = '';
+            $contest['user_wechat_id'] = '';
+            if(isset($user_info[$contest['user_id']])) {
+                $user = $user_info[$contest['user_id']];
+                $contest['user_nickname'] = $user['nickname'];
+                $contest['user_phone'] = $user['phone'];
+                $contest['user_wechat_id'] = $user['wechat_id'];
+            }
+        }
+        return $contests;
+    }
+
     public function betGames($nickname, $games) {
         $user = $this->userModel->getUserByNickname($nickname);
         if(empty($user)) {
@@ -73,6 +138,26 @@ class GameRepository extends BaseRepository {
             ];
         }
         return $this->contestModel->addRec($contest);
+    }
+
+    public function chooseLuckyUser($schedule_id) {
+        $user_ids = $this->userModel->getRecList('id');
+        $contests = $this->contestModel->getRecList(['id', 'lucky'], ['schedule_id' => $schedule_id, 'in' => ['user_id' => $user_ids], 'success' => true]);
+        $lucky_ids = [];
+        foreach($contests as $contest) {
+            if($contest['lucky']) {
+                throw new \Exception('本场已开过奖');
+            }
+            $lucky_ids[] = $contest['id'];
+        }
+        $success_num = config('game.success_num');
+        if(empty($success_num)) {
+            return;
+        }
+        if(count($lucky_ids) > $success_num) {
+            $lucky_ids = Arr::random($lucky_ids, $success_num);
+        }
+        $this->contestModel->updateRecById($lucky_ids, ['lucky' => true]);
     }
 
     public function randomSchedule($date) {

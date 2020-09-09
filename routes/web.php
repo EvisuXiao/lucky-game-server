@@ -34,13 +34,17 @@ $router->group(['prefix' => 'team'], function($r) {
 $router->group(['prefix' => 'schedule'], function($r) {
     $r->get('info', 'ScheduleController@list');
     $r->post('info', 'ScheduleController@add');
+    $r->put('info', 'ScheduleController@update');
     $r->delete('info', 'ScheduleController@delete');
-    $r->post('random', 'scheduleController@random');
+    $r->post('random', 'ScheduleController@random');
+    $r->get('record', 'ScheduleController@record');
 });
 
 $router->group(['prefix' => 'game'], function($r) {
     $r->get('list', 'GameController@list');
-    $r->post('list', 'GameController@bet');
+    $r->get('bet', 'GameController@record');
+    $r->post('bet', 'GameController@bet');
+    $r->put('lucky', 'GameController@lucky');
 });
 
 $router->group(['prefix' => 'setting'], function($r) {
