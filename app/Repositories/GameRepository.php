@@ -11,17 +11,68 @@ namespace App\Repositories;
 use App\Models\ContestModel;
 use App\Models\ScheduleModel;
 use App\Models\TeamModel;
+use App\Models\UserModel;
 use Illuminate\Support\Arr;
 
 class GameRepository extends BaseRepository {
+    protected $userModel = null;
     protected $teamModel = null;
     protected $scheduleModel = null;
     protected $contestModel = null;
 
-    public function __construct(TeamModel $teamModel, ScheduleModel $scheduleModel, ContestModel $contestModel) {
+    public function __construct(UserModel $userModel, TeamModel $teamModel, ScheduleModel $scheduleModel, ContestModel $contestModel) {
+        $this->userModel = $userModel;
         $this->teamModel = $teamModel;
         $this->scheduleModel = $scheduleModel;
         $this->contestModel = $contestModel;
+    }
+
+    public function getScheduleList($date) {
+        $where = [];
+        if(!empty($date)) {
+            $where['game_time >='] = $date . ' 00:00:00';
+            $where['game_time <='] = $date . ' 23:59:59';
+        }
+        return $this->scheduleModel->getRecList([DB_SELECT_ALL], $where);
+    }
+
+    public function getGameList($nickname, $date) {
+        $user = $this->userModel->getUserByNickname($nickname);
+        if(empty($user)) {
+            return [];
+        }
+        $schedules = $this->getScheduleList($date);
+        $schedule_ids = array_column($schedules, 'id');
+        $contest_list = $this->contestModel->getRecList(['schedule_id', 'bet', 'success', 'lucky'], ['in' => ['schedule_id' => $schedule_ids], 'user_id' => $user]);
+        $contest_info = array_column($contest_list, null, 'schedule_id');
+        foreach($schedules as &$schedule) {
+            $schedule['bet'] = 0;
+            $schedule['success'] = false;
+            $schedule['lucky'] = false;
+            if(isset($contest_info[$schedule['id']])) {
+                $contest = $contest_info[$schedule['id']];
+                $schedule['bet'] = $contest['bet'];
+                $schedule['success'] = $contest['success'];
+                $schedule['lucky'] = $contest['lucky'];
+            }
+        }
+        return $schedules;
+    }
+
+    public function betGames($nickname, $games) {
+        $user = $this->userModel->getUserByNickname($nickname);
+        if(empty($user)) {
+            return 0;
+        }
+        $contest = [];
+        foreach($games as $schedule_id => $bet) {
+            $contest[] = [
+                'schedule_id'   => $schedule_id,
+                'user_id'       => $user['id'],
+                'bet'           => $bet
+            ];
+        }
+        return $this->contestModel->addRec($contest);
     }
 
     public function randomSchedule($date) {

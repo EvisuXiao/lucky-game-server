@@ -34,7 +34,13 @@ $router->group(['prefix' => 'team'], function($r) {
 $router->group(['prefix' => 'schedule'], function($r) {
     $r->get('info', 'ScheduleController@list');
     $r->post('info', 'ScheduleController@add');
+    $r->delete('info', 'ScheduleController@delete');
     $r->post('random', 'scheduleController@random');
+});
+
+$router->group(['prefix' => 'game'], function($r) {
+    $r->get('list', 'GameController@list');
+    $r->post('list', 'GameController@bet');
 });
 
 $router->group(['prefix' => 'setting'], function($r) {

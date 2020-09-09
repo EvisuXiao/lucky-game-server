@@ -17,12 +17,22 @@ class ScheduleController extends Controller
     }
 
     public function list() {
-        return $this->succReturn($this->scheduleModel->getRecList());
+        $where = [];
+        if($this->input['date']) {
+            $where['game_time >='] = $this->input['date'] . ' 00:00:00';
+            $where['game_time <='] = $this->input['date'] . ' 23:59:59';
+        }
+        return $this->succReturn($this->scheduleModel->getRecList([DB_SELECT_ALL], $where));
     }
 
     public function add() {
-        $add = $this->scheduleModel->addSchedule($this->input['home_team_id'], $this->input['away_team_id'], $this->input['game_time']);
+        $add = $this->scheduleModel->addRec($this->input['schedules']);
         return !empty($add) ? $this->succReturn() : $this->failReturn();
+    }
+
+    public function delete() {
+        $upd = $this->scheduleModel->setRecEnabled($this->input['id'], false);
+        return !empty($upd) ? $this->succReturn() : $this->failReturn();
     }
 
     public function random() {

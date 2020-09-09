@@ -11,6 +11,10 @@ namespace App\Models;
 class ContestModel extends DaoModel
 {
     protected $table = 'contest';
+    protected $casts = [
+        'success'   => 'boolean',
+        'lucky'     => 'boolean'
+    ];
 
     public function addContest($schedule_id, $user_id, $bet) {
         return $this->addRec(compact('schedule_id', 'user_id', 'bet'));

@@ -15,7 +15,7 @@ CREATE TABLE `team` (
   `name` varchar(60) NOT NULL DEFAULT '' COMMENT '队伍名',
   `en_name` varchar(60) NOT NULL DEFAULT '' COMMENT '队伍英文名',
   `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '队标',
-  `enabled` tinyint(4) NOT NULL DEFAULT '1' COMMENT '是否可用',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`)
@@ -24,9 +24,12 @@ CREATE TABLE `team` (
 CREATE TABLE `schedule` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `home_team_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '主队ID',
+  `home_team_score` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT '主队得分',
   `away_team_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '客队ID',
+  `away_team_score` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT '客队得分',
   `game_time` timestamp NULL DEFAULT NULL COMMENT '比赛时间',
   `game_result` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '比赛结果',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`),
   KEY `idx_game_time` (`game_time`)
